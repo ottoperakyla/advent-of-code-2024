@@ -16,7 +16,7 @@
 
 (def real-data
   (->> (utils/read-file "input-04.txt")
-       (str/split-lines)
+       (string/split-lines)
        (mapv
          #(mapv str (vec %)))))
 
@@ -67,24 +67,24 @@
                       (= (inc word-index) (count word-to-find))
                       inc))))))))
 
-(defn row-col-indices [data]
-  (let [rows (count data)
-        cols (count (first data))]
-    (for [row (range rows)
-          col (range cols)]
-      [row col])))
-
 (def x-masses #{"MSMS" "MSSM" "SMSM" "SMMS"})
 
 (defn part-2 [data]
-  (letfn [(a-at-row-col? [[row col]]
+  (letfn [(row-col-indices [data]
+            (let [rows (count data)
+                  cols (count (first data))]
+              (for [row (range rows)
+                    col (range cols)]
+                [row col])))
+
+          (a-at-row-col? [[row col]]
             (= "A" (get-in data [row col])))
 
           (diagonals [row col]
-            [[(dec row) (dec col)]                                    ;; top left
-             [(inc row) (inc col)]                                    ;; bottom right
-             [(inc row) (dec col)]                                    ;; bottom left
-             [(dec row) (inc col)]                                    ;; top right
+            [[(dec row) (dec col)]                          ;; top left
+             [(inc row) (inc col)]                          ;; bottom right
+             [(inc row) (dec col)]                          ;; bottom left
+             [(dec row) (inc col)]                          ;; top right
              ])
 
           (diagonal-out-of-bounds? [[row col]]
