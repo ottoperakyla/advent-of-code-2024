@@ -20,13 +20,6 @@
        (mapv
          #(mapv str (vec %)))))
 
-(defn out-of-bounds? [data row col]
-  (or
-    (> row (dec (count data)))
-    (< row 0)
-    (> col (dec (count (first data))))
-    (< col 0)))
-
 (defn part-1 [data]
   (let [word-to-find ["X" "M" "A" "S"]
         rows (count data)
@@ -53,7 +46,7 @@
                word-count 0]
           (cond
             (or
-              (out-of-bounds? data current-row current-col)
+              (utils/out-of-bounds? data current-row current-col)
               (not= (get word-to-find word-index)
                     (get-in data [current-row current-col])))
             word-count
@@ -90,7 +83,7 @@
           (diagonal-out-of-bounds? [[row col]]
             (some
               (fn [[r c]]
-                (out-of-bounds? data r c))
+                (utils/out-of-bounds? data r c))
               (diagonals row col)))
 
           (characters-at-diagonals [[row col]]

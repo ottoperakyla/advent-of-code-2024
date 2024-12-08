@@ -19,3 +19,22 @@
     (into
       (subvec vec-coll 0 index)
       (subvec vec-coll (inc index)))))
+
+(defn get-middle-element [coll]
+  (nth coll (Math/floor (/ (count coll) 2))))
+
+(defn print-grid [grid]
+  (doseq [row grid]
+    (doseq [cell row]
+      (print cell))
+    (println)))
+
+(defn out-of-bounds? [data row col]
+  (or
+    (> row (dec (count data)))
+    (< row 0)
+    (> col (dec (count (first data))))
+    (< col 0)))
+
+(defn mapv-indexed [f coll]
+  (vec (map-indexed f coll)))
