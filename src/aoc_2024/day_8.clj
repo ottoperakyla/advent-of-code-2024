@@ -22,8 +22,8 @@
 (defn empty-space? [char]
   (= "." char))
 
-(defn antenna? [char]
-  (not (empty-space? char)))
+(def antenna?
+  (comp not empty-space?))
 
 (defn with-antinodes [antinodes data]
   (mapv-indexed
@@ -36,12 +36,15 @@
         row))
     data))
 
+(defn ->antennas [data]
+  (for [row (range (count data))
+        col (range (count (first data)))
+        :when (antenna? (get-in data [row col]))]
+    [row col]))
+
 (defn part-1 [data]
   (let [antennas
-        (for [row (range (count data))
-              col (range (count (first data)))
-              :when (antenna? (get-in data [row col]))]
-          [row col])
+        (->antennas data)
 
         antinodes
         (->>
@@ -76,17 +79,7 @@
 
 (defn part-2 [data]
   (let [antennas
-        (for [row (range (count data))
-              col (range (count (first data)))
-              :when (antenna? (get-in data [row col]))]
-          [row col])
-
-        ; After updating your model, it turns out that an antinode
-        ; occurs at any grid position exactly in line with at least two antennas
-        ; of the same frequency, regardless of distance.
-        ;
-        ; This means that some of the new antinodes will occur at the position
-        ; of each antenna (unless that antenna is the only one of its frequency).
+        (->antennas data)
 
         antinodes
         (->>
@@ -123,6 +116,8 @@
           (flatten)
           (partition 2)
           (set))]
+    (utils/print-grid
+      (with-antinodes antinodes data))
     (count antinodes)))
 
 (defn day-8 []
