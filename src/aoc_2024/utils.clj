@@ -1,18 +1,24 @@
 (ns aoc-2024.utils
   (:require [clojure.java.io :as io]
-            [clojure.string :as str]))
+            [clojure.string :as string]))
 
 (defn read-file [filename]
   (slurp (io/resource filename)))
 
 (defn parse-file [filename]
   (->> (read-file filename)
-       (str/split-lines)
-       (map #(str/split % #"\s+"))
+       (string/split-lines)
+       (map #(string/split % #"\s+"))
        (map (fn [numbers]
               (map
                 #(Integer/parseInt %)
                 numbers)))))
+
+(defn parse-grid [filename]
+  (->> (read-file filename)
+       (string/split-lines)
+       (mapv
+         #(mapv str (seq %)))))
 
 (defn remove-index [index coll]
   (let [vec-coll (vec coll)]

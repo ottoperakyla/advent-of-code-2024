@@ -1,19 +1,12 @@
 (ns aoc-2024.day-6
-  (:require [clojure.string :as string]
-            [aoc-2024.utils :refer [read-file
-                                    out-of-bounds?
-                                    mapv-indexed]]))
+  (:require [aoc-2024.utils :refer [out-of-bounds?
+                                    mapv-indexed
+                                    parse-grid]]))
 
-(defn parse-input [filename]
-  (->> (read-file filename)
-       (string/split-lines)
-       (mapv
-         #(mapv str (seq %)))))
-
-(def test-data (parse-input "input-06-test.txt"))
-(def test-data-part-2-1 (parse-input "input-06-part-2-test-1.txt"))
-(def test-data-part-2-2 (parse-input "input-06-part-2-test-2.txt"))
-(def real-data (parse-input "input-06-real.txt"))
+(def test-data (parse-grid "input-06-test.txt"))
+(def test-data-part-2-1 (parse-grid "input-06-part-2-test-1.txt"))
+(def test-data-part-2-2 (parse-grid "input-06-part-2-test-2.txt"))
+(def real-data (parse-grid "input-06-real.txt"))
 
 (def guard-characters
   #{"^" "<" ">" "v"})
