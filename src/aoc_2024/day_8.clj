@@ -16,6 +16,9 @@
 (def real-data
   (utils/parse-grid "input-08-real.txt"))
 
+(def test-data-part-2
+  (utils/parse-grid "input-08-part-2-test.txt"))
+
 (defn empty-space? [char]
   (= "." char))
 
@@ -71,11 +74,59 @@
       (with-antinodes antinodes data))
     (count antinodes)))
 
+(defn part-2 [data]
+  (let [antennas
+        (for [row (range (count data))
+              col (range (count (first data)))
+              :when (antenna? (get-in data [row col]))]
+          [row col])
+
+        ; After updating your model, it turns out that an antinode
+        ; occurs at any grid position exactly in line with at least two antennas
+        ; of the same frequency, regardless of distance.
+        ;
+        ; This means that some of the new antinodes will occur at the position
+        ; of each antenna (unless that antenna is the only one of its frequency).
+
+        antinodes
+        (->>
+          (mapcat
+            (fn [[row col]]
+              (for [[row' col'] antennas
+                    :let [row-delta (- row' row)
+                          col-delta (- col' col)]
+                    :when (and
+                            ;; check that antennas are the same frequency
+                            (= (get-in data [row col])
+                               (get-in data [row' col']))
+
+                            ;; dont check the antenna against itself
+                            (not (and
+                                   (= row row')
+                                   (= col col'))))]
+                (loop
+                  [current-row row
+                   current-col col
+                   antinodes [[current-row current-col]]]
+                  (let [next-row (+ current-row row-delta)
+                        next-col (+ current-col col-delta)]
+                    (if (not (utils/out-of-bounds?
+                               data
+                               next-row
+                               next-col))
+                      (recur
+                        next-row
+                        next-col
+                        (conj antinodes [next-row next-col]))
+                      antinodes)))))
+            antennas)
+          (flatten)
+          (partition 2)
+          (set))]
+    (count antinodes)))
+
 (defn day-8 []
-  (prn (part-1 test-data-simple-1))
-  (prn (part-1 test-data-simple-2))
-  (prn (part-1 test-data-two-freqs))
-  (prn (part-1 test-data))
-  (prn (part-1 real-data)))
+  (prn (part-1 real-data))
+  (prn (part-2 real-data)))
 
 (day-8)
