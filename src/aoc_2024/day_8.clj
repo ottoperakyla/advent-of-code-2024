@@ -41,53 +41,34 @@
           [row col])
 
         antinodes
-        (partition
-          2
-          (flatten
-            (for [[row col] antennas]
-              (for [[row' col'] antennas
-                    :let [row-delta (- row row')
-                          col-delta (- col col')
-                          antinode-row (+ row row-delta)
-                          antinode-col (+ col col-delta)]
-                    :when (and
-                            ;; check that antennas are the same frequency
-                            (= (get-in data [row col])
-                               (get-in data [row' col']))
+        (set
+          (partition
+            2
+            (flatten
+              (for [[row col] antennas]
+                (for [[row' col'] antennas
+                      :let [row-delta (- row row')
+                            col-delta (- col col')
+                            antinode-row (+ row row-delta)
+                            antinode-col (+ col col-delta)]
+                      :when (and
+                              ;; check that antennas are the same frequency
+                              (= (get-in data [row col])
+                                 (get-in data [row' col']))
 
-                            ;; dont check the antenna against itself
-                            (not (and
-                                   (= row row')
-                                   (= col col')))
+                              ;; dont check the antenna against itself
+                              (not (and
+                                     (= row row')
+                                     (= col col')))
 
-                            (or
-                              ;; empty space
-                              (empty-space? (get-in data [antinode-row antinode-col]))
-                              ;; antenna of different frequency
-                              #_(not= (get-in data [row col])
-                                    (get-in data [antinode-row antinode-col]))
-                              )
-
-                            ;; remove out of bounds coordinates
-                            (not (utils/out-of-bounds?
-                                   data
-                                   antinode-row
-                                   antinode-col)))]
-                (do
-                  #_(prn "compare" [row col] [row' col'])
-                  #_(prn "antinode" [antinode-row antinode-col])
+                              ;; remove out of bounds coordinates
+                              (not (utils/out-of-bounds?
+                                     data
+                                     antinode-row
+                                     antinode-col)))]
                   [antinode-row antinode-col])))))]
-    #_(utils/print-grid test-data-simple-1)
-    #_(prn antennas)
-
-    ;; - antinodes can occur at locations that contain other antennas
-
-    (prn "antinodes" antinodes)
-
-    (utils/print-grid data)
-    (println)
     (utils/print-grid
-      (with-antinodes (set antinodes) data))
+      (with-antinodes antinodes data))
     (count antinodes)))
 
 (defn day-8 []
@@ -96,7 +77,7 @@
   (prn (part-1 test-data-simple-2))
   (prn (part-1 test-data-two-freqs))
   (prn (part-1 test-data))
-  #_(prn (part-1 real-data))
+  (prn (part-1 real-data))
   )
 
 (day-8)
