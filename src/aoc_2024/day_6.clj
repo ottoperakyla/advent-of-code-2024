@@ -1,6 +1,5 @@
 (ns aoc-2024.day-6
   (:require [aoc-2024.utils :refer [out-of-bounds?
-                                    mapv-indexed
                                     parse-grid]]))
 
 (def test-data (parse-grid "input-06-test.txt"))
@@ -93,8 +92,8 @@
 (defn part-1 [grid]
   (count (->visited-positions grid)))
 
-(defn contains-loop? [grid]
-  (let [starting-pos (->starting-pos grid)]
+(defn contains-loop? [starting-pos]
+  (fn [grid]
     (loop [guard-pos starting-pos
            visited #{guard-pos}]
       (when show-path?
@@ -114,35 +113,32 @@
 
 (defn place-obstruction-at [grid]
   (fn [[target-row target-col]]
-    (mapv-indexed
-      (fn [current-row row]
-        (mapv-indexed
-          (fn [current-col col]
-            (if (and (= target-row current-row)
-                     (= target-col current-col))
-              "#"
-              col))
-          row))
-      grid)))
+    (assoc-in grid [target-row target-col] "#")))
 
 (defn part-2 [grid]
   (let [visited-positions
         (->visited-positions grid)
 
         empty-cells-within-visited-positions
-        (for [row (range (count grid))
-              col (range (count (first grid)))
-              :let [current-char (get-in grid [row col])]
-              :when (and (= "." current-char)
-                         (visited-positions [row col]))]
-          [row col])]
+        (filterv
+          (fn [[row col]]
+            (= "." (get-in grid [row col])))
+          visited-positions)
+
+        starting-pos
+        (->starting-pos grid)]
 
     (->> empty-cells-within-visited-positions
-         (filter (comp contains-loop? (place-obstruction-at grid)))
+         (pmap
+           (comp
+             (contains-loop? starting-pos)
+             (place-obstruction-at grid)))
+         (doall)
+         (filterv identity)
          (count))))
 
 (defn day-6 []
-  (prn (part-1 real-data))
-  (prn (part-2 real-data)))
+  (time (part-1 real-data))
+  (time (part-2 real-data)))
 
 (day-6)
