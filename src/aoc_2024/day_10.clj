@@ -35,16 +35,11 @@
                   (filter (fn [[r c]] (= (inc value-here) (get-in grid [r c]))))
                   (map #(->reachable-9-heights trailhead % grid)))))))
 
-(defn part-1 [grid]
-  (let [trailheads
-        (for [row (range (count grid))
-              col (range (count (first grid)))
-              :when (= 0 (get-in grid [row col]))]
-          [row col])]
-    (->> trailheads
-         (map #(->reachable-9-heights % % grid))
-         (apply set/union)
-         (count))))
+(defn ->trailheads [grid]
+  (for [row (range (count grid))
+        col (range (count (first grid)))
+        :when (= 0 (get-in grid [row col]))]
+    [row col]))
 
 (defn ->rating [trailhead [row col] grid]
   (cond
@@ -65,15 +60,16 @@
            (map #(->rating trailhead % grid))
            (apply +)))))
 
+(defn part-1 [grid]
+  (->> (->trailheads grid)
+       (map #(->reachable-9-heights % % grid))
+       (apply set/union)
+       (count)))
+
 (defn part-2 [grid]
-  (let [trailheads
-        (for [row (range (count grid))
-              col (range (count (first grid)))
-              :when (= 0 (get-in grid [row col]))]
-          [row col])]
-    (->> trailheads
-         (map #(->rating % % grid))
-         (apply +))))
+  (->> (->trailheads grid)
+       (map #(->rating % % grid))
+       (apply +)))
 
 (defn day-10 []
   (prn (part-1 test-data-simple))
