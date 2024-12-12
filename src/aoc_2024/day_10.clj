@@ -16,6 +16,22 @@
 (def real-data
   (parse-input "input-10-real.txt"))
 
+(defn ->trailheads [grid]
+  (for [row (range (count grid))
+        col (range (count (first grid)))
+        :when (= 0 (get-in grid [row col]))]
+    [row col]))
+
+(defn ->neighbours [row col]
+  [[(dec row) col]
+   [row (inc col)]
+   [row (dec col)]
+   [(inc row) col]])
+
+(defn valid-neighbour? [value grid]
+  (fn [[row col]]
+    (= (inc value) (get-in grid [row col]))))
+
 (defn ->reachable-9-heights [trailhead [row col] grid]
   (cond
     (utils/out-of-bounds? grid row col)
@@ -25,21 +41,11 @@
     #{[trailhead [row col]]}
 
     :else
-    (let [value-here (get-in grid [row col])
-          neighbours [[(dec row) col]
-                      [row (inc col)]
-                      [row (dec col)]
-                      [(inc row) col]]]
+    (let [value-here (get-in grid [row col])]
       (apply set/union
-             (->> neighbours
-                  (filter (fn [[r c]] (= (inc value-here) (get-in grid [r c]))))
+             (->> (->neighbours row col)
+                  (filter (valid-neighbour? value-here grid))
                   (map #(->reachable-9-heights trailhead % grid)))))))
-
-(defn ->trailheads [grid]
-  (for [row (range (count grid))
-        col (range (count (first grid)))
-        :when (= 0 (get-in grid [row col]))]
-    [row col]))
 
 (defn ->rating [trailhead [row col] grid]
   (cond
@@ -50,13 +56,9 @@
     1
 
     :else
-    (let [value-here (get-in grid [row col])
-          neighbours [[(dec row) col]
-                      [row (inc col)]
-                      [row (dec col)]
-                      [(inc row) col]]]
-      (->> neighbours
-           (filter (fn [[r c]] (= (inc value-here) (get-in grid [r c]))))
+    (let [value-here (get-in grid [row col])]
+      (->> (->neighbours row col)
+           (filter (valid-neighbour? value-here grid))
            (map #(->rating trailhead % grid))
            (apply +)))))
 
