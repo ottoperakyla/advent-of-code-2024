@@ -46,15 +46,6 @@
   (vec (map-indexed f coll)))
 
 (defn swap [index-a index-b coll]
-  (mapv-indexed
-    (fn [idx item]
-      (cond
-        (= idx index-a)
-        (nth coll index-b)
-
-        (= idx index-b)
-        (nth coll index-a)
-
-        :else
-        item))
-    coll))
+  (-> (vec coll)
+      (assoc index-a (nth coll index-b))
+      (assoc index-b (nth coll index-a))))
