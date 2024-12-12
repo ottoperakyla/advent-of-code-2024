@@ -40,23 +40,46 @@
         (for [row (range (count grid))
               col (range (count (first grid)))
               :when (= 0 (get-in grid [row col]))]
-          [row col])
+          [row col])]
+    (->> trailheads
+         (map #(->reachable-9-heights % % grid))
+         (apply set/union)
+         (count))))
 
-        count-of-reachable-9-heights
-        (loop [trailheads (seq trailheads)
-               all-9-heights #{}]
-          (if trailheads
-            (let [trailhead (first trailheads)
-                  reachable-9-heights (->reachable-9-heights trailhead trailhead grid)]
-              (recur
-                (next trailheads)
-                (set/union all-9-heights reachable-9-heights)))
-            (count all-9-heights)))]
-    count-of-reachable-9-heights))
+(defn ->rating [trailhead [row col] grid]
+  (cond
+    (utils/out-of-bounds? grid row col)
+    0
+
+    (= 9 (get-in grid [row col]))
+    1
+
+    :else
+    (let [value-here (get-in grid [row col])
+          neighbours [[(dec row) col]
+                      [row (inc col)]
+                      [row (dec col)]
+                      [(inc row) col]]]
+      (->> neighbours
+           (filter (fn [[r c]] (= (inc value-here) (get-in grid [r c]))))
+           (map #(->rating trailhead % grid))
+           (apply +)))))
+
+(defn part-2 [grid]
+  (let [trailheads
+        (for [row (range (count grid))
+              col (range (count (first grid)))
+              :when (= 0 (get-in grid [row col]))]
+          [row col])]
+    (->> trailheads
+         (map #(->rating % % grid))
+         (apply +))))
 
 (defn day-10 []
   (prn (part-1 test-data-simple))
   (prn (part-1 test-data))
-  (prn (part-1 real-data)))
+  (prn (part-1 real-data))
+  (prn (part-2 test-data))
+  (prn (part-2 real-data)))
 
 (day-10)
