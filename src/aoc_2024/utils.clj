@@ -14,11 +14,14 @@
                 #(Integer/parseInt %)
                 numbers)))))
 
-(defn parse-grid [filename]
-  (->> (read-file filename)
-       (string/split-lines)
-       (mapv
-         #(mapv str (seq %)))))
+(defn parse-grid
+  ([filename]
+   (parse-grid filename str))
+  ([filename f]
+   (->> (read-file filename)
+        (string/split-lines)
+        (mapv
+          #(mapv f (seq %))))))
 
 (defn remove-index [index coll]
   (let [vec-coll (vec coll)]
@@ -49,3 +52,6 @@
   (-> (vec coll)
       (assoc index-a (nth coll index-b))
       (assoc index-b (nth coll index-a))))
+
+(defn parse-int [str]
+  (Integer/parseInt str))
