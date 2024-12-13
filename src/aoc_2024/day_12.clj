@@ -95,7 +95,7 @@
 
         perimeters
         (map
-          #(apply + %)
+          (partial apply +)
           (map
             (fn [component]
               (map
@@ -107,18 +107,19 @@
                           (utils/out-of-bounds? data r c)
                           (not= (get-in data [r c])
                                 (get-in data [row col]))))
-                      (->neighbours row col)))) component))
+                      (->neighbours row col))))
+                component))
             components))
 
         dimensions
         (map vector areas perimeters)
 
         price
-        (reduce
-          (fn [sum [area perimeter]]
-            (+ sum (* area perimeter)))
-          0
-          dimensions)]
+        (->> dimensions
+             (map
+               (fn [[area perimeter]]
+                 (* area perimeter)))
+             (apply +))]
     price))
 
 (defn day-12 []
