@@ -17,119 +17,114 @@
 (def real-data
   (utils/parse-grid "input-12-real.txt"))
 
-(def default-inc (fnil inc 0))
+(defn ->find [x parent]
+  (loop [root x]
+    (if (= (nth parent root) root)
+      root
+      (recur (nth parent root)))))
 
-(defn flood-fill [region row col data seen]
-  (cond
-    (utils/out-of-bounds? data row col)
-    1
+(defn ->merge [x y parent]
+  (assoc parent
+    (->find x parent)
+    (->find y parent)))
 
-    (contains? @seen [row col])
-    0
+(defn ->coordinate [index num-cols]
+  [(quot index num-cols)
+   (rem index num-cols)])
 
-    (not= region (get-in data [row col]))
-    1
+(defn ->array-index [row col num-cols]
+  (+ (* row num-cols) col))
 
-    :else
-    (do
-      (swap! seen conj [row col])
-      (+
-        (flood-fill region (inc row) col data seen)
-        (flood-fill region (dec row) col data seen)
-        (flood-fill region row (dec col) data seen)
-        (flood-fill region row (inc col) data seen)))))
+(defn ->components [parent num-cols]
+  (vals
+    (reduce
+      (fn [acc [index x]]
+        (update acc (->find x parent) conj
+                (->coordinate index num-cols)))
+      {}
+      (zipmap (range) parent))))
+
+(defn ->neighbours [row col]
+  [[(dec row) col]
+   [(inc row) col]
+   [row (dec col)]
+   [row (inc col)]])
 
 (defn part-1 [data]
-  #_(let [cells (for [row (range (count data))
-                      col (range (count (first data)))]
-                  [row col])]
-      (loop [cells' (seq cells)
-             result {:areas      {}
-                     :perimeters {}}]
-        (if cells'
-          (let [cell (first cells')]
-            (recur
-              (next cells')
-              result))
-          result)))
+  (let [parent (vec
+                 (range
+                   (* (count data) (count (first data)))))
+        num-rows (count data)
+        num-cols (count (first data))
+        merges (for [row (range num-rows)
+                     col (range num-cols)
+                     :when (or
+                             ;; cell to the right is the same region
+                             (= (get-in data [row col])
+                                (get-in data [row (inc col)]))
+                             ;; cell under this one is the same region
+                             (= (get-in data [row col])
+                                (get-in data [(inc row) col])))
+                     :let [coordinate (->array-index row col num-cols)]]
+                 [coordinate
+                  (keep
+                    (fn [[r c]]
+                      (when (= (get-in data [row col])
+                               (get-in data [r c]))
+                        (->array-index r c num-cols)))
+                    [[row (inc col)]
+                     [(inc row) col]])])
 
+        parent'
+        (reduce
+          (fn [acc [origin [right under]]]
+            (cond->>
+              (->merge origin right acc)
+              (some? under)
+              (->merge origin under)))
+          parent
+          merges)
 
-  (let [areas (atom {})
-        perimeters (atom {})]
+        components
+        (->components parent' (count (first data)))
 
-    (doall
-      (for [row (range (count data))
-            col (range (count (first data)))]
-        (let [seen (atom #{})]
-          (swap! areas update (get-in data [row col]) default-inc)
-          (swap! perimeters
-                 update
-                 (get-in data [row col])
-                 (fn [d]
-                   (set/union d
-                              #{(flood-fill
-                                  (get-in data [row col])
-                                  row
-                                  col
-                                  data
-                                  seen)}))))))
+        areas
+        (map
+          count
+          components)
 
+        perimeters
+        (map
+          #(apply + %)
+          (map
+            (fn [component]
+              (map
+                (fn [[row col]]
+                  (count
+                    (filter
+                      (fn [[r c]]
+                        (or
+                          (utils/out-of-bounds? data r c)
+                          (not= (get-in data [r c])
+                                (get-in data [row col]))))
+                      (->neighbours row col)))) component))
+            components))
 
-    ;A region of C plants with price 14 * 28 = 392. (420)
-    ;A region of C plants with price 1 * 4 = 4. (420)
+        dimensions
+        (map vector areas perimeters)
 
-    ;A region of E plants with price 13 * 18 = 234. ok
-
-    ;A region of F plants with price 10 * 18 = 180. ok
-
-    ;A region of I plants with price 4 * 8 = 32. (396)
-    ;A region of I plants with price 14 * 22 = 308. (396)
-
-    ;A region of J plants with price 11 * 20 = 220. ok
-
-    ;A region of M plants with price 5 * 12 = 60. ok
-
-    ;A region of R plants with price 12 * 18 = 216. ok
-
-    ;A region of S plants with price 3 * 8 = 24. ok
-
-    ;A region of V plants with price 13 * 20 = 260. ok
-
-    #_(prn "areas" @areas)
-    #_(prn "perimeters" @perimeters)
-
-    (let [prices (reduce
-                   (fn [acc [region area]]
-                     (assoc acc region (* area (apply + (vec (get @perimeters region))))))
-                   {}
-                   @areas)]
-      #_(prn "prices" prices)
-      (apply + (vals prices))
-      )))
+        price
+        (reduce
+          (fn [sum [area perimeter]]
+            (+ sum (* area perimeter)))
+          0
+          dimensions)]
+    price))
 
 (defn day-12 []
-  ;; 140
-  #_(prn (part-1 test-data))
-  ;; 772
-  #_(prn (part-1 test-data-2))
-
-  ;; expected 1930, but got 2010
-  ;; getting too high on this one, but
-  ;; too low on real data (???)
-  ;; 2214 with code using sets
+  (prn (part-1 test-data))
+  (prn (part-1 test-data-2))
   (prn (part-1 test-data-3))
-
-  ; OOXO
-  ; OOXO
-
-  ; "areas"       {"O" 6, "X" 2}
-  ; "perimeters"  {"O" 6, "X" 6} <- O pitäisi olla 8 + 6 = 14
-  ; "prices"      {"O" 36, "X" 12}
-
-  #_(prn (part-1 test-data-3-modified))
-
-  ;; 789328 is too low
-  ;; 11711724 is too high
   (prn (part-1 real-data)))
 
 (day-12)
