@@ -50,77 +50,67 @@
    [row (dec col)]
    [row (inc col)]])
 
+(defn do-merges [parent merges]
+  (reduce
+    (fn [acc [origin [right under]]]
+      (cond->>
+        (->merge origin right acc)
+        (some? under)
+        (->merge origin under)))
+    parent
+    merges))
+
+(defn ->price [dimensions]
+  (->> dimensions
+       (map #(* (first %) (second %)))
+       (apply +)))
+
+(defn ->merges [data]
+  (let [num-rows (count data)
+        num-cols (count (first data))]
+    (for [row (range num-rows)
+          col (range num-cols)
+          :when (or
+                  ;; cell to the right is the same region
+                  (= (get-in data [row col])
+                     (get-in data [row (inc col)]))
+                  ;; cell under this one is the same region
+                  (= (get-in data [row col])
+                     (get-in data [(inc row) col])))
+          :let [coordinate (->array-index row col num-cols)]]
+      [coordinate
+       (keep
+         (fn [[r c]]
+           (when (= (get-in data [row col])
+                    (get-in data [r c]))
+             (->array-index r c num-cols)))
+         [[row (inc col)]
+          [(inc row) col]])])))
+
 (defn part-1 [data]
-  (let [parent (vec
-                 (range
-                   (* (count data) (count (first data)))))
-        num-rows (count data)
-        num-cols (count (first data))
-        merges (for [row (range num-rows)
-                     col (range num-cols)
-                     :when (or
-                             ;; cell to the right is the same region
-                             (= (get-in data [row col])
-                                (get-in data [row (inc col)]))
-                             ;; cell under this one is the same region
-                             (= (get-in data [row col])
-                                (get-in data [(inc row) col])))
-                     :let [coordinate (->array-index row col num-cols)]]
-                 [coordinate
-                  (keep
-                    (fn [[r c]]
-                      (when (= (get-in data [row col])
-                               (get-in data [r c]))
-                        (->array-index r c num-cols)))
-                    [[row (inc col)]
-                     [(inc row) col]])])
-
-        parent'
-        (reduce
-          (fn [acc [origin [right under]]]
-            (cond->>
-              (->merge origin right acc)
-              (some? under)
-              (->merge origin under)))
-          parent
-          merges)
-
-        components
-        (->components parent' (count (first data)))
-
-        areas
-        (map
-          count
-          components)
-
-        perimeters
-        (map
-          (partial apply +)
-          (map
-            (fn [component]
-              (map
-                (fn [[row col]]
-                  (count
-                    (filter
-                      (fn [[r c]]
-                        (or
-                          (utils/out-of-bounds? data r c)
-                          (not= (get-in data [r c])
-                                (get-in data [row col]))))
-                      (->neighbours row col))))
-                component))
-            components))
-
-        dimensions
-        (map vector areas perimeters)
-
-        price
-        (->> dimensions
-             (map
-               (fn [[area perimeter]]
-                 (* area perimeter)))
-             (apply +))]
-    price))
+  (let [parent (vec (range (* (count data) (count (first data)))))
+        merges (->merges data)
+        parent' (do-merges parent merges)
+        components (->components parent' (count (first data)))
+        areas (map count components)
+        perimeters (map
+                     (partial apply +)
+                     (map
+                       (fn [component]
+                         (map
+                           (fn [[row col]]
+                             (count
+                               (filter
+                                 (fn [[r c]]
+                                   (or
+                                     (utils/out-of-bounds? data r c)
+                                     (not= (get-in data [r c])
+                                           (get-in data [row col]))))
+                                 (->neighbours row col))))
+                           component))
+                       components))
+        dimensions (map vector areas perimeters)]
+    (->price dimensions)))
 
 (defn day-12 []
   (prn (part-1 test-data))
