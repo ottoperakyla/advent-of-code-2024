@@ -1,4 +1,4 @@
-(ns aoc-2024.day-8
+(ns aoc-2024.day-08
   (:require [aoc-2024.utils :as utils :refer [mapv-indexed]]))
 
 (def test-data-simple-1

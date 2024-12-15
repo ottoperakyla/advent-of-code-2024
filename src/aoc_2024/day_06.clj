@@ -1,4 +1,4 @@
-(ns aoc-2024.day-6
+(ns aoc-2024.day-06
   (:require [aoc-2024.utils :refer [out-of-bounds?
                                     parse-grid]]))
 

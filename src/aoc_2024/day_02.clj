@@ -1,4 +1,4 @@
-(ns aoc-2024.day-2
+(ns aoc-2024.day-02
   (:require [aoc-2024.utils :as utils]))
 
 (def test-reports

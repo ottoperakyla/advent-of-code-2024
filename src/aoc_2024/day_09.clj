@@ -1,4 +1,4 @@
-(ns aoc-2024.day-9
+(ns aoc-2024.day-09
   (:require [aoc-2024.utils :as utils :refer [swap]]
             [clojure.string :as string]
             [clojure.pprint :as pprint]))
